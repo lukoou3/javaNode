@@ -1,0 +1,197 @@
+https://blog.csdn.net/color_wind/article/details/50132209
+https://blog.csdn.net/qq_17084083/article/details/79350028
+
+网上事例一：
+public class a {
+ 
+	/**
+	 *  获取当前index状态，［0,1］；
+	 *  @param value     存储的开关数据int32
+	 *  @param index     第几位
+	 *  @return          当前位置的值
+	 */
+	static boolean value_bit(int value,int index){
+		return ( value >> --index & 1 ) > 0;
+	}
+ 
+	/**
+	 *  处理后的存储数据 int32
+	 *  @param value     存储的开关数据int32
+	 *  @param index     第几位
+	 *  @param set       开关状态
+	 *  @return          当前位置的值［0,1］
+	 */
+	static int value_bit(int value,int index,boolean set){
+		index --;
+		if(set){
+			value = 1 << index | value;
+		} else {
+			value = ~(1<<index) & value;
+		}
+		return value;
+	}
+ 
+	public static void main(String[] args) {
+		int data = 0;
+		data = a.value_bit(data,1,true);
+		data = a.value_bit(data,2,true);
+		data = a.value_bit(data,3,true);
+		data = a.value_bit(data,5,true);
+		System.out.println("data:"+data + " data_bin:"+Integer.toBinaryString(data));
+ 
+		data = a.value_bit(data,1,false);
+		data = a.value_bit(data,3,false);
+		data = a.value_bit(data,4,true);
+		System.out.println("data:"+data + " data_bin:"+Integer.toBinaryString(data));
+ 
+		System.out.println(a.value_bit(data,1));
+		System.out.println(a.value_bit(data,2));
+		System.out.println(a.value_bit(data,3));
+		System.out.println(a.value_bit(data,4));
+		System.out.println(a.value_bit(data,5));
+ 
+ 
+		/** out :
+		data:23 data_bin:10111
+		data:26 data_bin:11010
+		false
+		true
+		false
+		true
+		true
+		*/
+	}
+}
+
+
+
+网上事例二：
+某些应用场景：如用户是否实名制，是否绑定手机号，是否会员等等，这些状态可以同时存在也可以只有某项存在，最简单的做法是，每个状态一个字段，如是否绑定手机号码一个字段（isBindPhone），是否会员一个字段（isAssociator），是否实名制（isRealName），如此便可完成以上状态的并存或者单个状态，那么问题来了，如果我后续业务中还有加入其他的状态如是否注册邮箱，是否绑定银行卡等等（又改需求），如果一个字段一个字段加上去并非不可，只是工作量有点大，而且还需要修改数据库的表结构，让我们回想下linux系统中对文件的权限1,2,4,分别代表的是可执行，可写，可读，0则代表无权限，写到这里很多小伙伴应该是知道怎么使用了，这里用的是二进制的001代表可执行，010代表可写，100代表可读，那么只需要3位二进制数即可表示这三种状态的混合搭配，因为二进制只有0和1，0代表无，1代表有，如此一来再多可并发的状态只需要，一个状态加多一位二进制数即可，而且这样做比上面很多个字段的做法节省空间，因为一个只字节有8个bit就是8位二进制数，那么一个字节都可以表示8中状态，如果八个状态都有即是1111 1111 换成十进制数才256而已。（废话不多说下面代码实现）
+
+首先创建一个用户类三个字段:
+package com.fzz.statecode.demo;
+ 
+public class User {
+ 
+	public User(){
+		
+	}
+	public User(String username, int age){
+		this.username = username;
+		this.age = age;
+		this.state = StateUtil.INITSTATE; //初始化状态
+	}
+	
+	private String username; //用户名
+	private int age;  //年龄
+	//代表状态（开发中我们是需要把很多的信息存进去的如卡号，邮箱地址，我们存个状态码只是为了我们在读取状态的时候只需要一个字段就够了）
+	private int state; 
+	
+	/**
+	 * @param stateNum  绑定状态码
+	 */
+	public void bindState(int stateNum){
+		this.state = this.state | stateNum;
+	}
+	/**
+	 * @param stateNum  绑定状态码
+	 */
+	public void relieveState(int stateNum){
+		this.state = this.state ^ stateNum;
+	}
+	
+	public String getUsername() {
+		return username;
+	}
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	public int getAge() {
+		return age;
+	}
+	public void setAge(int age) {
+		this.age = age;
+	}
+	public int getState() {
+		return state;
+	}
+	public void setState(int state) {
+		this.state = state;
+	}			
+}
+
+状态工具类：
+package com.fzz.statecode.demo;
+ 
+import java.util.ArrayList;
+import java.util.List;
+ 
+public class StateUtil {
+	
+	//需求需要的状态：是否实名制，是否绑定手机号，是否注册邮箱，是否绑定银行卡等等  （这里四个状态用四位二进制0000表示）
+	public static final int INITSTATE = 0; //初始化状态
+	public static final int ISREALNAME = 1; //是否实名制  0001
+	public static final int ISBINDPHONE = 2; //是否绑定手机号码  0010
+	public static final int ISBINDEMAIL = 4; //是否绑定邮箱  0100
+	public static final int ISBINDBANKCARD = 8; //是否绑定银行卡  1000
+	
+	public static List<String> getStateStrs (int UserState){
+		List<String> stateStrs = new ArrayList<>();
+		if(UserState == INITSTATE){
+			stateStrs.add("初始化状态");
+		}
+		if((UserState & ISREALNAME) == ISREALNAME){
+			stateStrs.add("已实名制");
+		}
+		if((UserState & ISBINDPHONE) == ISBINDPHONE){
+			stateStrs.add("已绑定手机号码");
+		}
+		if((UserState & ISBINDEMAIL) == ISBINDEMAIL){
+			stateStrs.add("已绑定邮箱");
+		}
+		if((UserState & ISBINDBANKCARD) == ISBINDBANKCARD){
+			stateStrs.add("已绑定银行卡");
+		}
+		return stateStrs;
+	}
+}
+
+main方法运行：
+package com.fzz.statecode.demo;
+ 
+import java.util.Arrays;
+ 
+public class App {
+ 
+	public static void main(String[] args) {
+		
+		//新建一个用户
+		User admin = new User("fzz",25);
+		System.out.println(StateUtil.getStateStrs(admin.getState()));
+		
+		//一下操作一般在实际的业务中是伴随着其他操作完成的，在这里不做展示
+		//实名认证
+		admin.bindState(StateUtil.ISREALNAME);
+		System.out.println(StateUtil.getStateStrs(admin.getState()));
+		//绑定手机号
+		admin.bindState(StateUtil.ISBINDPHONE);
+		System.out.println(StateUtil.getStateStrs(admin.getState()));
+		//注册邮箱
+		admin.bindState(StateUtil.ISBINDEMAIL);
+		System.out.println(StateUtil.getStateStrs(admin.getState()));
+		//绑定银行卡
+		admin.bindState(StateUtil.ISBINDBANKCARD);
+		System.out.println(StateUtil.getStateStrs(admin.getState()));
+		
+		//解绑手机号
+		admin.relieveState(StateUtil.ISBINDPHONE);
+		System.out.println(StateUtil.getStateStrs(admin.getState()));
+		//解绑注册邮箱
+		admin.relieveState(StateUtil.ISBINDEMAIL);
+		System.out.println(StateUtil.getStateStrs(admin.getState()));
+		//解绑绑定银行卡
+		admin.relieveState(StateUtil.ISBINDBANKCARD);
+		System.out.println(StateUtil.getStateStrs(admin.getState()));
+	}
+	
+}
