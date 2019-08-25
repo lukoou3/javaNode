@@ -73,9 +73,8 @@ VMware公司从2010年开始赞助Redis的开发， Salvatore Sanfilippo和Piete
 * 网站访问统计。  
 * 数据过期处理（可以精确到毫秒）  
 
-
-
-
+MongoDB与Redis的比较
+https://www.cnblogs.com/chinesern/p/5581422.html
 
 
 

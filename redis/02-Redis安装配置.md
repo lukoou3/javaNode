@@ -80,6 +80,13 @@ ssh命令窗口关闭则redis-server程序结束，不推荐使用此方法
 # ./redis-server redis.conf
 ```
 
+查看进程：
+```sh
+[hadoop@hadoop01 bin]$ ps -ef | grep redis
+hadoop     2467      1  0 16:32 ?        00:00:00 ./redis-server *:6379    
+hadoop     2472   2433  0 16:32 pts/0    00:00:00 grep redis
+```
+
 **后端启动的关闭方式**   
 非正常关闭（不推荐使用）：
 ```
