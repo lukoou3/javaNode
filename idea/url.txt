@@ -1,0 +1,33 @@
+IDEA自动编译不用每次make
+https://my.oschina.net/1987times/blog/330207
+
+IDEA 编译整个工程而不是单个JAVA文件，导致调试时编译整个项目
+https://www.douban.com/group/topic/106772201/
+
+开发工具——设置Intellij IDEA忽略部分类编译错误
+https://blog.csdn.net/reese1995/article/details/77149455
+
+intellij idea关闭重复代码提醒
+https://blog.csdn.net/ck4438707/article/details/52233968
+
+idea查看properties中文变成unicode码如何解决
+https://jingyan.baidu.com/article/d7130635cd857913fdf4751d.html
+
+
+
+idea debugger console 不见了--还原 console 图标
+https://blog.csdn.net/jiangyu1013/article/details/80447086
+
+
+intellij idea设置打开多个文件显示在多行tab上
+https://jingyan.baidu.com/article/27fa7326ab35cd46f9271f74.html
+
+
+IDEA从svn检出的代码修改后，提示修改变化，父文件夹也提示修改变化
+https://blog.csdn.net/pyd1040201698/article/details/83896617
+
+
+如何在Intellij IDEA中切换svn分支?
+https://blog.csdn.net/a656678879/article/details/79004450
+
+
