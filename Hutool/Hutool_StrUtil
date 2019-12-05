@@ -1,0 +1,195 @@
+## 一、字符串处理工具类 StrUtil
+### isBlank、isNotBlank、isEmpty、isNotEmpty判断字符串是否为空
+和Apache Commons Lang中的StringUtil中的方法一样，Blank和Empty的区别就是Empty只判断是否为null或者空字符串，Blank会额外判断空白字符(如空格)，相当于trim了一下。
+
+```java
+boolean isBlank(CharSequence str)
+```
+
+### hasBlank、hasEmpty
+就是给定一些字符串(参数是可变参数)，如果一旦有空的就返回true，常用于判断好多字段是否有空的（例如web表单数据）。
+
+```java
+boolean hasBlank(CharSequence... strs)
+```
+
+### sub
+类似与python的切片，索引支持负数，越界不会抛出异常，有自动修正的功能，比JDK subString灵活一点。
+
+唯一不足的地方是没有像python的切片一样可以省略结束索引，反倒是String的subString提供了一个重载的方法只接受一个参数。
+
+```java
+/**
+ * 改进JDK subString
+ * index从0开始计算，最后一个字符为-1
+ * 如果from和to位置一样，返回 "" 
+ * 如果from或to为负数，则按照length从后向前数位置，如果绝对值大于字符串长度，则from归到0，to归到length
+ * 如果经过修正的index中from大于to，则互换from和to example: 
+ * abcdefgh 2 3 =》 c 
+ * abcdefgh 2 -3 =》 cde 
+ * 
+ * @param str String
+ * @param fromIndex 开始的index（包括）
+ * @param toIndex 结束的index（不包括）
+ * @return 字串
+ */
+String sub(CharSequence str, int fromIndex, int toIndex)
+```
+
+### removePrefix、removeSuffix、addPrefixIfNot、addSuffixIfNot
+removePrefix、removeSuffix这两个是去掉字符串的前缀后缀的，如果前缀后缀不存在则返回原字符串，例如去个文件名的扩展名啥。还有忽略大小写的removePrefixIgnoreCase和removeSuffixIgnoreCase都比较实用。
+
+addPrefixIfNot、addSuffixIfNot用于添加前后缀。
+```java
+String removePrefix(CharSequence str, CharSequence prefix)
+String removePrefixIgnoreCase(CharSequence str, CharSequence prefix)
+String removeSuffix(CharSequence str, CharSequence suffix)
+String removeSuffixIgnoreCase(CharSequence str, CharSequence suffix)
+//如果给定字符串不是以prefix开头的，在开头补充 prefix
+String addPrefixIfNot(CharSequence str, CharSequence prefix)
+//如果给定字符串不是以suffix结尾的，在尾部补充 suffix
+String addSuffixIfNot(CharSequence str, CharSequence suffix)
+```
+
+### format、indexedFormat、format格式化
+这三个方法的使用的python字符串的format方法一样(类比是一样的，java的Map类似python的dict)。
+
+三种形式，简直和python一样啊：
+```
+"this is {} for {}"
+"this is {0} for {1}"
+"{a} and {b}"
+```
+
+```java
+String format(CharSequence template, Object... params) 
+String indexedFormat(CharSequence pattern, Object... arguments) 
+String format(CharSequence template, Map<?, ?> map) 
+```
+
+### trim、strip
+trim、strip用来去除首位的字符，trim用来去除空白，strip和python的strip可以指定字符去除。
+
+```java
+//除去字符串头尾部的空白，如果字符串是null，依然返回null。注意，和String.trim不同，此方法使用CharUtil.isBlankChar 来判定空白， 因而可以除去英文字符集之外的其它空白，如中文空格。
+String trim、(CharSequence str)
+//给定字符串数组全部做去首尾空格(null不做处理)，用的是String的trim
+void trim(String[] strs)
+//除去字符串头尾部的空白，如果字符串是null，返回""
+String trimToEmpty(CharSequence str)
+//除去字符串头尾部的空白，如果字符串是""，返回null,StrUtil.trimToNull("     ") = null
+String trimToNull(CharSequence str)
+//除去字符串头部的空白，如果字符串是null，则返回null。使用CharUtil.isBlankChar 来判定空白
+String trimStart(CharSequence str)
+//除去字符串尾部的空白，如果字符串是null，则返回null。使用CharUtil.isBlankChar 来判定空白
+String trimEnd(CharSequence str)
+//mode:1表示trimStart，0表示trim全部， 1表示trimEnd。trim、trimStart、trimEnd都是调用的此方法
+String trim(CharSequence str, int mode)
+//去除两边的指定字符串，prefixOrSuffix：前缀或后缀
+String strip(CharSequence str, CharSequence prefixOrSuffix)
+//去除两边的指定字符串，prefix指定前缀suffix 指定后缀
+String strip(CharSequence str, CharSequence prefix, CharSequence suffix)
+String stripIgnoreCase(CharSequence str, CharSequence prefixOrSuffix)
+String stripIgnoreCase(CharSequence str, CharSequence prefix, CharSequence suffix)
+```
+
+### startWith、endWith、contains、getContainsStr包含与否
+
+```java
+//是否以给定字符开始
+boolean startWith(CharSequence str, char c)
+//是否以指定字符串开头，isIgnoreCase - 是否忽略大小写
+boolean startWith(CharSequence str, CharSequence prefix, boolean isIgnoreCase)
+//是否以指定字符串开头
+boolean startWith(CharSequence str, CharSequence prefix)
+boolean startWithIgnoreCase(CharSequence str, CharSequence prefix)
+//给定字符串是否以任何一个字符串开始
+boolean startWithAny(CharSequence str, CharSequence... prefixes)
+boolean endWith(CharSequence str, char c)
+boolean endWith(CharSequence str, CharSequence suffix, boolean isIgnoreCase)
+boolean endWith(CharSequence str, CharSequence suffix)
+boolean endWithIgnoreCase(CharSequence str, CharSequence suffix)
+boolean endWithAny(CharSequence str, CharSequence... suffixes)
+//是否包含给定字符
+boolean contains(CharSequence str, char searchChar)
+boolean containsAny(CharSequence str, CharSequence... testStrs)
+boolean containsAny(CharSequence str, char... testChars)
+boolean containsBlank(CharSequence str)
+boolean containsIgnoreCase(CharSequence str, CharSequence testStr)
+boolean containsAnyIgnoreCase(CharSequence str, CharSequence... testStrs)
+//查找指定字符串是否包含指定字符串列表中的任意一个字符串，如果包含返回找到的第一个字符串，否则返回null
+String getContainsStr(CharSequence str, CharSequence... testStrs)
+String getContainsStrIgnoreCase(CharSequence str, CharSequence... testStrs)
+```
+
+### getGeneralField、genSetter、genGetter java属性名get、set方法处理
+setter gettter 处理
+```java
+//获得set或get或is方法对应的标准属性名，否则null。getName =》name，setName =》name，isName  =》name
+String getGeneralField(CharSequence getOrSetMethodName)
+//生成set方法名
+String genSetter(CharSequence fieldName)
+//生成get方法名
+String genGetter(CharSequence fieldName)
+```
+
+### upperFirst、lowerFirst 大小写
+```java
+//原字符串首字母大写并在其首部添加指定字符串 例如：str=name, preString=get =》 return getName
+String upperFirstAndAddPre(CharSequence str, String preString)
+//大写首字母
+String upperFirst(CharSequence str)
+//小写首字母
+String lowerFirst(CharSequence str)
+//给定字符串中的字母是否全部为大写，判断依据如下：1. 大写字母包括A-Z 2. 其它非字母的Unicode符都算作大写
+boolean isUpperCase(CharSequence str)
+//给定字符串中的字母是否全部为小写，判断依据如下：1. 小写字母包括a-z 2. 其它非字母的Unicode符都算作小写
+boolean isLowerCase(CharSequence str)
+```
+
+### split、cut 分割
+split、cut有不少方法，这里不列举那么多了。
+
+```java
+String[] splitToArray(CharSequence str, char separator)
+//切分字符串为int数组，转换失败的元素为0
+int[] splitToInt(CharSequence str, CharSequence separator)
+long[] splitToLong(CharSequence str, CharSequence separator)
+List<String> split(CharSequence str, char separator)
+//切分字符串，去除切分后每个元素两边的空白符，去除空白项
+List<String> splitTrim(CharSequence str, CharSequence separator)
+//切分字符串，isTrim - 是否去除切分字符串后每个元素两边的空格 ignoreEmpty - 是否忽略空串
+List<String> split(CharSequence str, char separator, boolean isTrim, boolean ignoreEmpty)
+String[] split(CharSequence str, CharSequence separator)
+//根据给定长度，将给定字符串截取为多个部分，len - 每一个小节的长度
+String[] split(CharSequence str, int len)
+//将字符串切分为N等份，partLength - 每等份的长度，这个cut似乎和上个split一样
+String[] cut(CharSequence str, int partLength)
+```
+
+### join 连接集合
+和python的join类似，以 conjunction 为分隔符将多个对象转换为字符串。
+
+```java
+String join(CharSequence conjunction, Object... objs)
+```
+
+### toUnderlineCase、toCamelCase 驼峰式、下划线命名转换
+```java
+//将驼峰式命名的字符串转换为下划线方式。如果转换前的驼峰式命名的字符串为空，则返回空字符串。
+String toUnderlineCase(CharSequence str)
+//将驼峰式命名的字符串转换为使用符号连接方式。如果转换前的驼峰式命名的字符串为空，则返回空字符串。
+String toSymbolCase(CharSequence str, char symbol)
+//将下划线方式命名的字符串转换为驼峰式。如果转换前的下划线大写方式命名的字符串为空，则返回空字符串。
+String toCamelCase(CharSequence name)
+```
+
+### fill、pad 填充字符串
+```java
+String fillBefore(String str, char filledChar, int len)
+String fillAfter(String str, char filledChar, int len)
+//将已有字符串填充为规定长度，如果已有字符串超过这个长度则返回这个字符串。len - 填充长度 isPre - 是否填充在前
+String fill(String str, char filledChar, int len, boolean isPre)
+String padPre(CharSequence str, int minLength, char padChar)
+String padEnd(CharSequence str, int minLength, char padChar)
+```
