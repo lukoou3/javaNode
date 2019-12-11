@@ -70,3 +70,13 @@ Arrays.copyOf(T[] original, int newLength)
 Arrays.copyOfRange(T[] original, int from, int to)
 ```
 
+## 永远不要在循环之外调用wait方法
+java中多线程中测试某个条件的变化用 if 还是用 while？
+
+wait/notify、notifyAll都是和while配合应用的。可以避免多线程并发判断逻辑失效问题。
+
+永远在while循环里而不是if语句下使用wait。这样，循环会在线程睡眠前后都检查wait的条件，并在条件实际上并未改变的情况下处理唤醒通知。
+
+多线程消费或者多线程生产时候，当调到notify（）方法的时候，可能只叫醒同类的线性，说明白一点就是；生产者叫醒了另外一个生产者然后进入到wait中；解决办法把notify（）方法改成 notifyAll()。
+
+
