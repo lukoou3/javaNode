@@ -4,8 +4,8 @@ https://www.cnblogs.com/clwydjgs/p/9390488.html
 最全PyCharm 教程
 https://www.jianshu.com/p/2bfc19e1381c
 
-IDEA自动编译不用每次make
-https://my.oschina.net/1987times/blog/330207
+Idea的一些调试技巧及设置todo
+https://www.cnblogs.com/softidea/p/7245884.html
 
 IDEA 编译整个工程而不是单个JAVA文件，导致调试时编译整个项目
 https://www.douban.com/group/topic/106772201/
@@ -37,3 +37,5 @@ https://blog.csdn.net/pyd1040201698/article/details/83896617
 https://blog.csdn.net/a656678879/article/details/79004450
 
 
+IntelliJ IDEA 下的svn配置及使用的非常详细的图文总结
+https://www.cnblogs.com/ios9/p/7546328.html
