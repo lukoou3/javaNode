@@ -1,3 +1,9 @@
+你们都在用IntelliJ IDEA吗？或许你们需要看一下这篇博文
+https://www.cnblogs.com/clwydjgs/p/9390488.html
+
+最全PyCharm 教程
+https://www.jianshu.com/p/2bfc19e1381c
+
 IDEA自动编译不用每次make
 https://my.oschina.net/1987times/blog/330207
 
