@@ -1,6 +1,6 @@
 
 一个发送udp报文的例子(功能的最后是发送报文)：
-```
+```java
 package com.dp.dac.dao;
 
 import java.io.ByteArrayOutputStream;
