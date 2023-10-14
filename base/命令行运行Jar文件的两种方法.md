@@ -15,7 +15,10 @@ java –jar test.jar
 java –classpath test.jar org.duomu.demo.HelloWorld
 ```
 
-
+后来我在linux中试了怎么不行，-cp行：
+```
+java -cp flink-libs-with-dependencies.jar -Xmx4096m -Xms2048m com.flink.test.JsonLogParseStream --local 1 --parallelism 1 --json_format json
+```
 
 
 
