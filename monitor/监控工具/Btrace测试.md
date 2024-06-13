@@ -208,5 +208,75 @@ java.lang.Thread.run(Thread.java:750)
 
 ```
 
+### 打印构造函数参数
+```
+查看日志是昨天20:03机器关机，今天凌晨00:30重启后druid集群状态不正常，界面显示管理节点列表是192.168.44.14(leader)和192.168.44.11，但是摄入任务获取的管理节点列表是192.168.44.11，导致任务访问192.168.44.14节点认证不通过。
+
+重启192.168.44.14节点，任务恢复正常。
+
+可能是druid通过zookeeper动态发现管理节点的bug，偶发现象。
+```
+
+错误日志：
+```
+2024-06-13T02:39:05,894 INFO [ServiceClientFactory-0] org.apache.druid.rpc.ServiceClientImpl - Service [OVERLORD] issued redirect to unknown URL [http://192.168.44.14:8081/druid/indexer/v1/action] on attempt #55; retrying in 60,000 ms.
+2024-06-13T02:40:05,898 INFO [ServiceClientFactory-1] org.apache.druid.rpc.ServiceClientImpl - Service [OVERLORD] issued redirect to unknown URL [http://192.168.44.14:8081/druid/indexer/v1/action] on attempt #56; retrying in 60,000 ms.
+2024-06-13T02:41:05,902 INFO [ServiceClientFactory-0] org.apache.druid.rpc.ServiceClientImpl - Service [OVERLORD] issued redirect to unknown URL [http://192.168.44.14:8081/druid/indexer/v1/action] on attempt #57; retrying in 60,000 ms.
+2024-06-13T02:42:05,906 INFO [ServiceClientFactory-1] org.apache.druid.rpc.ServiceClientImpl - Service [OVERLORD] issued redirect to unknown URL [http://192.168.44.14:8081/druid/indexer/v1/action] on attempt #58; retrying in 60,000 ms.
+```
+
+ServiceClientImpl类判断不满足以下条件会报上面的错：
+```java
+serviceLocations.getLocations().stream().anyMatch(loc -> serviceLocationMatches(loc, redirectLocationNoPath))
+```
+
+```java
+public class ServiceLocations
+{
+  private static final Logger log = new Logger(ServiceLocations.class.getSimpleName()); // 新加的调试
+  private final Set<ServiceLocation> locations;
+  private final boolean closed;
+
+  private ServiceLocations(final Set<ServiceLocation> locations, final boolean closed)
+  {
+    this.locations = Preconditions.checkNotNull(locations, "locations");
+    this.closed = closed;
+
+    log.info("locations:[%s],closed:[%s]", locations, closed); // 新加的调试
+
+    if (closed && !locations.isEmpty()) {
+      throw new IAE("Locations must be empty for closed services");
+    }
+  }
+}
+```
+
+ServiceLocationsBtrace.java:
+```java
+package com.btrace.druid;
+
+import org.openjdk.btrace.core.types.AnyType;
+import org.openjdk.btrace.core.annotations.*;
+
+import static org.openjdk.btrace.core.BTraceUtils.*;
+
+@BTrace
+public class ServiceLocationsBtrace {
+
+    @OnMethod(clazz = "org.apache.druid.rpc.ServiceLocations", method = "<init>")
+    public static void doPollEntry(AnyType locations, boolean closed){
+        println(timestamp("yyyy-MM-dd HH:mm:ss.SSS") + ":locations:" + locations + ",closed:" + closed + "");
+        println("#############################");
+    }
+}
+```
+
+
+
+
+
+
+
+
 
 
