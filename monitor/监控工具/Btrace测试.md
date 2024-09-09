@@ -273,6 +273,136 @@ public class ServiceLocationsBtrace {
 
 
 
+### 打印异常调用栈
+
+异常日志信息只是`java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.Long (java.lang.Integer and java.lang.Long are in module java.base of loader 'bootstrap')`，想要打印调用栈，发现没法捕获ClassCastException和Exception的异常，自己定义的异常可以捕获：
+
+```java
+package com.btrace.druid;
+
+import org.openjdk.btrace.core.types.AnyType;
+import org.openjdk.btrace.core.annotations.*;
+
+import static org.openjdk.btrace.core.BTraceUtils.*;
+
+@BTrace
+public class ClassCastExceptionBtrace {
+    @OnMethod(clazz = "com.geedgenetworks.starrocks.udf.MyException", method = "<init>")
+    public static void doPollEntry0(AnyType s){
+        println(timestamp("yyyy-MM-dd HH:mm:ss.SSS") + ":s:" + s);
+        jstack();
+        println("#############################");
+    }
+    
+    @OnMethod(clazz = "java.lang.ClassCastException", method = "<init>")
+    public static void doPollEntry1(AnyType s){
+        println(timestamp("yyyy-MM-dd HH:mm:ss.SSS") + ":s:" + s);
+        jstack();
+        println("#############################");
+    }
+    
+    @OnMethod(clazz = "java.lang.Throwable", method = "<init>")
+    public static void doPollEntry2(){
+        println(timestamp("yyyy-MM-dd HH:mm:ss.SSS"));
+        jstack();
+        println("#############################");
+    }
+    
+    @OnMethod(clazz = "java.lang.Throwable", method = "<init>")
+    public static void doPollEntry3(AnyType s){
+        println(timestamp("yyyy-MM-dd HH:mm:ss.SSS") + ":s:" + s);
+        jstack();
+        println("#############################");
+    }
+    
+}
+```
+
+解决方式druid，构造了QueryInterruptedException来包装异常，捕获它，然后打印其包装异常的调用栈：
+
+```java
+package com.btrace.druid;
+
+import org.openjdk.btrace.core.types.AnyType;
+import org.openjdk.btrace.core.annotations.*;
+
+import static org.openjdk.btrace.core.BTraceUtils.*;
+
+@BTrace
+public class QueryInterruptedExceptionBtrace {
+    @OnMethod(clazz = "org.apache.druid.query.QueryInterruptedException", method = "<init>")
+    public static void doPollEntry0(Throwable s){
+        jstack(s); // s异常的调用栈
+        println(timestamp("yyyy-MM-dd HH:mm:ss.SSS") + ":s:" + s);
+        jstack(); // QueryInterruptedException构造函数的调用栈
+        println("#############################");
+    }
+    
+
+    @OnMethod(clazz = "org.apache.druid.query.QueryInterruptedException", method = "<init>")
+    public static void doPollEntry2(AnyType s, AnyType s2){
+        println(timestamp("yyyy-MM-dd HH:mm:ss.SSS") + ":s:" + s + ",s2:" + s2);
+        jstack();
+        println("#############################");
+    }
+    
+    @OnMethod(clazz = "org.apache.druid.query.QueryInterruptedException", method = "<init>")
+    public static void doPollEntry3(AnyType s, AnyType s1, AnyType s2){
+        println(timestamp("yyyy-MM-dd HH:mm:ss.SSS") + ":s:" + s + ":s1:" + s1 + ",s2:" + s2);
+        jstack();
+        println("#############################");
+    }
+    
+}
+```
+
+输出：
+
+```
+java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.Long (java.lang.Integer and java.lang.Long are in module java.base of loader 'bootstrap')
+
+        org.apache.druid.query.aggregation.sketch.HdrHistogram.HdrHistogramToQuantilePostAggregator$1.compare(HdrHistogramToQuantilePostAggregator.java:53)
+        org.apache.druid.query.topn.TopNNumericResultBuilder.lambda$new$0(TopNNumericResultBuilder.java:96)
+        java.base/java.util.PriorityQueue.siftUpUsingComparator(PriorityQueue.java:675)
+        java.base/java.util.PriorityQueue.siftUp(PriorityQueue.java:652)
+        java.base/java.util.PriorityQueue.offer(PriorityQueue.java:345)
+        java.base/java.util.PriorityQueue.add(PriorityQueue.java:326)
+        org.apache.druid.query.topn.TopNNumericResultBuilder.addEntry(TopNNumericResultBuilder.java:209)
+        org.apache.druid.query.topn.TopNBinaryFn.apply(TopNBinaryFn.java:133)
+        org.apache.druid.query.topn.TopNBinaryFn.apply(TopNBinaryFn.java:40)
+        org.apache.druid.java.util.common.guava.ParallelMergeCombiningSequence$MergeCombineAction.compute(ParallelMergeCombiningSequence.java:584)
+        java.base/java.util.concurrent.RecursiveAction.exec(RecursiveAction.java:189)
+        java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:290)
+        java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1020)
+        java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1656)
+        java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1594)
+        java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:183)
+
+2024-08-21 09:30:50.391:s:java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.Long (java.lang.Integer and java.lang.Long are in module java.base of loader 'bootstrap')
+
+org.apache.druid.query.QueryInterruptedException.<init>(QueryInterruptedException.java:64)
+org.apache.druid.server.QueryResultPusher.push(QueryResultPusher.java:166)
+org.apache.druid.sql.http.SqlResource.doPost(SqlResource.java:125)
+jdk.internal.reflect.GeneratedMethodAccessor99.invoke(Unknown Source)
+java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+java.base/java.lang.reflect.Method.invoke(Method.java:566)
+com.sun.jersey.spi.container.JavaMethodInvokerFactory$1.invoke(JavaMethodInvokerFactory.java:60)
+com.sun.jersey.server.impl.model.method.dispatch.AbstractResourceMethodDispatchProvider$ResponseOutInvoker._dispatch(AbstractResourceMethodDispatchProvider.java:205)
+com.sun.jersey.server.impl.model.method.dispatch.ResourceJavaMethodDispatcher.dispatch(ResourceJavaMethodDispatcher.java:75)
+com.sun.jersey.server.impl.uri.rules.HttpMethodRule.accept(HttpMethodRule.java:302)
+com.sun.jersey.server.impl.uri.rules.ResourceClassRule.accept(ResourceClassRule.java:108)
+com.sun.jersey.server.impl.uri.rules.RightHandPathRule.accept(RightHandPathRule.java:147)
+com.sun.jersey.server.impl.uri.rules.RootResourceClassesRule.accept(RootResourceClassesRule.java:84)
+com.sun.jersey.server.impl.application.WebApplicationImpl._handleRequest(WebApplicationImpl.java:1542)
+com.sun.jersey.server.impl.application.WebApplicationImpl._handleRequest(WebApplicationImpl.java:1473)
+com.sun.jersey.server.impl.application.WebApplicationImpl.handleRequest(WebApplicationImpl.java:1419)
+com.sun.jersey.server.impl.application.WebApplicationImpl.handleRequest(WebApplicationImpl.java:1409)
+com.sun.jersey.spi.container.servlet.WebComponent.service(WebComponent.java:409)
+com.sun.jersey.spi.container.servlet.ServletContainer.service(ServletContainer.java:558)
+com.sun.jersey.spi.container.servlet.ServletContainer.service(ServletContainer.java:733)
+javax.servlet.http.HttpServlet.service(HttpServlet.java:790)
+```
+
 
 
 
