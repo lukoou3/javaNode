@@ -1,3 +1,14 @@
+
+## jvisualvm下载地址
+
+在高版本JDK（大于1.8或后期更新的1.8版本）中已经不会再自动集成 VisualVM，https://visualvm.github.io/index.html 到这里进行下载
+
+下载的 visualvm 默认会找环境中的 jdk1.8，但如果你不是 jdk1.8 则可以修改配置（visualvm_218/etc/visualvm.conf），修改内容如下：
+```
+# 设置成自己安装的java路径
+visualvm_jdkhome="D:\tool\java\java17"
+```
+
 ## jvisualvm
 `http://www.tianshouzhi.com/api/tutorials/jvm/352`
 
