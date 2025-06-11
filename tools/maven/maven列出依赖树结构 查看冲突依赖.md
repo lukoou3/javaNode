@@ -49,9 +49,9 @@
 
 [https://blog.csdn.net/qq_24712507/article/details/123658596](https://blog.csdn.net/qq_24712507/article/details/123658596 "https://blog.csdn.net/qq_24712507/article/details/123658596")
 
+# idea 查看引入某个依赖的依赖树
 
+![](assets/markdown-img-paste-20250611095546533.png)
 
-
-
-
+![](assets/markdown-img-paste-20250611095715393.png)
 
