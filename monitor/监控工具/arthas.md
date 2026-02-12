@@ -236,7 +236,56 @@ flink日志，消费者卡在了，修改属性后恢复：
 [2025-07-16 13:25:51+0000] INFO  [Kafka Fetcher for Source: kafka_source -> etl_processor -> Sink: starrocks_sink (1/1)#0] org.apache.kafka.clients.consumer.internals.AbstractCoordinator [] - [Consumer clientId=DATAPATH-TELEMETRY-RECORD, groupId=etl_datapath_telemetry_record_kafka_to_starrocks] Discovered group coordinator 192.168.44.11:9094 (id: 2147483646 rack: null)
 ```
 
+问了下grok ai，他竟然给出了原因，直接搜谷歌是搜不出来的，ai会在特定领域搜索，缩小了搜索范围。
 
+下面是我问的两次话：
+```
+使用kafka消费者时发现一个问题，开始自动提交offset时，报错，日志说是要重试发现Coordinator ，但是也没有发现，导致之后的offset一直提交不成功：
+[2026-02-09 18:37:59+0000] WARN  [Kafka Fetcher for Source: traffic_general_stat_kafka_source -> traffic_general_stat_filter -> traffic_general_stat_time_processor -> (Sink: traffic_general_stat_starrocks_sink, Sink: traffic_general_stat_clickhouse_sink) (1/1)#0] org.apache.kafka.clients.consumer.internals.ConsumerCoordinator [] - [Consumer clientId=tsg-network-traffic-general-aggregator, groupId=tsg-network-traffic-general-aggregator] Offset commit failed on partition NETWORK-TRAFFIC-METRIC-1 at offset 19932683: This is not the correct coordinator.
+[2026-02-09 18:37:59+0000] INFO  [Kafka Fetcher for Source: traffic_general_stat_kafka_source -> traffic_general_stat_filter -> traffic_general_stat_time_processor -> (Sink: traffic_general_stat_starrocks_sink, Sink: traffic_general_stat_clickhouse_sink) (1/1)#0] org.apache.kafka.clients.consumer.internals.AbstractCoordinator [] - [Consumer clientId=tsg-network-traffic-general-aggregator, groupId=tsg-network-traffic-general-aggregator] Group coordinator 192.168.44.14:9094 (id: 2147483645 rack: null) is unavailable or invalid due to cause: error response NOT_COORDINATOR.isDisconnected: false. Rediscovery will be attempted.
+```
+
+```
+kafka有这个bug吗，之前flink1.13版本是没有问题的，flink1.15的kafka发现这个问题，kafka社区是否发现解决这个bug
+```
+
+```
+你怎么这个厉害，这个问题都能搜索到，我直接使用谷歌搜索不到
+
+为什么你用谷歌搜不到，或者搜到了但没那么直接呢？大概有几个原因：
+
+1.JIRA票号太具体
+
+像“KAFKA-13840”或者“FLINK-28060”这种编号，普通搜索时如果不加“jira”或“apache”前缀，谷歌往往优先返回无关的博客、论坛或同名数字的东西。很多人搜的时候会加一堆描述词（比如“kafka offset commit failed not the correct coordinator”），反而把票号本身淹没了。
+
+2.技术issue的讨论分散
+
+这个bug的讨论主要集中在：Apache Jira（官方票据）
+Flink mailing list / dev邮件列表
+少数Stack Overflow / GitHub issue
+Confluent / AWS 的知识库文章
+这些地方谷歌的排名不一定很高，尤其是中文搜索时，很多英文技术issue的中文翻译很少。
+
+3.我的“搜索方式”不同
+
+我不是简单地扔一个关键词给搜索引擎，而是：直接关联已知的Kafka/Flink常见问题模式
+结合错误日志里的关键短语（NOT_COORDINATOR、commit failed、coordinator unavailable）
+匹配版本变更历史（Flink 1.13 → 1.15 的 Kafka 客户端升级）
+快速定位到社区公认的那个bug编号
+这相当于我脑子里已经有一张“Kafka消费者常见坑”的地图，所以能很快跳到正确的票据。
+
+4.实时知识更新
+
+我的知识是持续更新的，包含了很多2023年之后的修复记录和社区讨论，所以能直接告诉你“KAFKA-13840 在 3.2.1 修复了”这种结论，而不用你自己去翻一堆评论和patch。
+
+
+```
+
+
+kafka和flink的bug号，这个问题没有直接小版本修复，都是需要升级版本：
+https://issues.apache.org/jira/browse/KAFKA-13840
+
+https://issues.apache.org/jira/browse/FLINK-28060
 
 
 
